@@ -28,7 +28,7 @@ suspicious_logs = []
 def detect_attacks(file):
     for line in file:
         try:
-            log = json.loads(line)
+            log = line
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
             ip = log.get("log", "").split()[0]
             path = log.get("log", "").split()[6]
