@@ -75,8 +75,7 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
         cursor = conn.cursor()
         for log, attack_type in suspicious_logs:
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            output = parse_httpd_log(log)
-            console.log(output)
+            output = parse_httpd_log_2(log)
             if(output is None):
                 continue
             request_line = output.request_line.split(" ")
