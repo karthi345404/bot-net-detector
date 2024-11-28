@@ -3,6 +3,8 @@ import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 import mysql.connector
+from apachelogs import LogParser, COMBINED
+
 # MySQL database connection details
 DB_CONFIG = {
    "host": "grafana-test.c0lyfsbxamho.us-east-1.rds.amazonaws.com",
@@ -75,9 +77,12 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
             output = parse_httpd_log(log)
             console.log(output)
+            if(output is None):
+                continue
+            request_line = output.request_line.split(" ")
             cursor.execute(
-                "INSERT INTO suspicious_activity (timestamp, request_ip, user_agent, attack_type) VALUES (%s, %s, %s, %s)",
-                (timestamp, output["ip"], output["user_agent"], attack_type)
+                "INSERT INTO suspicious_activity (timestamp, request_ip, user_agent, attack_type, http_method, path, protocol, status, size, referrer) VALUES (%s, %s, %s, %s)",
+                (output.request_time_fields.timestamp, output.request_host, output.headers_in["User-Agent"], attack_type, request_line[0], request_line[1], request_line[2], )
             )
         conn.commit()
     except mysql.connector.Error as err:
@@ -110,11 +115,20 @@ def parse_httpd_log(log_entry):
     else:
         raise ValueError("Log entry does not match expected format.")
 
-           
+def parse_httpd_log_2(log_entry):
+    try: 
+        parser = LogParser(COMBINED)
+        output = parser.parse(log_entry)
+        return output
+    except: 
+        return None
+        
+
 if(__name__ == '__main__'):
     # Run detection and save results
-    log_file = "19_58.json"  # Replace with your log file
-    suspicious_logs = detect_attacks(log_file)
-    save_suspicious_logs_to_mysql(suspicious_logs)
-    print("Suspicious activity logs saved to MySQL.")
+    # log_file = "19_58.json"  # Replace with your log file
+    # suspicious_logs = detect_attacks(log_file)
+    # save_suspicious_logs_to_mysql(suspicious_logs)
+    # print("Suspicious activity logs saved to MySQL.")
+    print(parse_httpd_log_2('103.16.69.193 - - [28/Nov/2024:18:27:38 +0000] "GET /app/img/bridge.svg HTTP/2.0" 200 5603'))
 
