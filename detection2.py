@@ -20,7 +20,7 @@ THRESHOLDS = {
    "brute_force_login": 10,
    "file_inclusion_patterns": ["..", "/etc/passwd", "boot.ini"],
    "query_string_length": 300,
-   "referrer_anomalies": ["", "spam-site.com"]
+#    "referrer_anomalies": ["", "spam-site.com"]
 }
 # Initialize counters
 ip_request_counts = defaultdict(list)
@@ -29,6 +29,8 @@ def detect_attacks(file):
     for line in file:
         try:
             log = line
+            if(line.get("log").find("[ssl:info]") != -1):
+                continue
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
             ip = log.get("log", "").split()[0]
             path = log.get("log", "").split()[6]
@@ -46,8 +48,8 @@ def detect_attacks(file):
                 suspicious_logs.append((log, "Suspicious User-Agent"))
             elif any(restricted in path for restricted in THRESHOLDS["suspicious_paths"]):
                 suspicious_logs.append((log, "Restricted Path Access"))
-            elif referer in THRESHOLDS["referrer_anomalies"]:
-                suspicious_logs.append((log, "Suspicious Referrer"))
+            # elif referer in THRESHOLDS["referrer_anomalies"]:
+            #     suspicious_logs.append((log, "Suspicious Referrer"))
             elif any(keyword in path.lower() for keyword in THRESHOLDS["sql_injection_patterns"]):
                 # Detect SQL injection patterns
                 suspicious_logs.append((log, "Possible SQL Injection"))
@@ -63,14 +65,15 @@ def detect_attacks(file):
             return suspicious_logs
         except json.JSONDecodeError:
             print("Invalid JSON format in log:", line)
-def save_to_mysql(suspicious_logs):
+            
+def save_suspicious_logs_to_mysql(suspicious_logs):
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
         for log, attack_type in suspicious_logs:
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            ip = log.get("log", "").split()[0]
-            user_agent = log.get("log", "").split('"')[-2] if '"' in log.get("log", "") else "No User Agent Data"
+            # user_agent = log.get("log", "").split('"')[-2] if '"' in log.get("log", "") else "No User Agent Data"
+            
             cursor.execute(
                 "INSERT INTO suspicious_activity (timestamp, request_ip, user_agent, attack_type) VALUES (%s, %s, %s, %s)",
                 (timestamp, ip, user_agent, attack_type)
@@ -87,6 +90,6 @@ if(__name__ == '__main__'):
     # Run detection and save results
     log_file = "19_58.json"  # Replace with your log file
     suspicious_logs = detect_attacks(log_file)
-    save_to_mysql(suspicious_logs)
+    save_suspicious_logs_to_mysql(suspicious_logs)
     print("Suspicious activity logs saved to MySQL.")
 

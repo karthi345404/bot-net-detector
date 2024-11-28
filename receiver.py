@@ -1,9 +1,8 @@
 from flask import Flask, request, jsonify
-from detection2 import detect_attacks, save_to_mysql
+from detection2 import detect_attacks, save_suspicious_logs_to_mysql
 
 
 app = Flask(__name__)
-
 
 
 @app.route('/logs', methods=['POST'])
@@ -15,8 +14,8 @@ def receive_logs():
   # Process logs here if needed
   # For example, write to a file or a database
   suspicious_logs = detect_attacks(log_data)
-  save_to_mysql(suspicious_logs)
-  print(suspicious_logs)
+  save_suspicious_logs_to_mysql(suspicious_logs)
+  print(suspicious_logs)  
 
   # Send a response back to Fluent Bit
   return jsonify({"status": "received"}), 200
