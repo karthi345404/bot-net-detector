@@ -44,30 +44,23 @@ def detect_attacks(file):
             # Detect suspicious activities
             if user_agent in THRESHOLDS["user_agent_anomalies"]:
                 suspicious_logs.append((log, "Suspicious User-Agent"))
-                return (log, "Suspicious User-Agent")
             elif any(restricted in path for restricted in THRESHOLDS["suspicious_paths"]):
                 suspicious_logs.append((log, "Restricted Path Access"))
-                return (log, "Restricted Path Access")
             elif referer in THRESHOLDS["referrer_anomalies"]:
                 suspicious_logs.append((log, "Suspicious Referrer"))
-                return (log, "Suspicious Referrer")
             elif any(keyword in path.lower() for keyword in THRESHOLDS["sql_injection_patterns"]):
                 # Detect SQL injection patterns
                 suspicious_logs.append((log, "Possible SQL Injection"))
-                return (log, "Possible SQL Injection")
             # Detect file inclusion attempts
             if any(pattern in query for pattern in THRESHOLDS["file_inclusion_patterns"]):
                 suspicious_logs.append((log, "File Inclusion Attempt"))
-                return (log, "File Inclusion Attempt")
             # Detect long or unusual query strings
             if len(query) > THRESHOLDS["query_string_length"]:
                 suspicious_logs.append((log, "Unusual Query String Length"))
-                return (log, "Unusual Query String Length")
 
             else:
                 suspicious_logs.append((log, None))
-                return (log, None)
-
+            return suspicious_logs
         except json.JSONDecodeError:
             print("Invalid JSON format in log:", line)
 def save_to_mysql(suspicious_logs):
