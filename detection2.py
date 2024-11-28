@@ -27,8 +27,8 @@ THRESHOLDS = {
 }
 # Initialize counters
 ip_request_counts = defaultdict(list)
-suspicious_logs = []
 def detect_attacks(file):
+    suspicious_logs = []
     for line in file:
         try:
             log = line
