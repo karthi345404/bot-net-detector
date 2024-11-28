@@ -1,3 +1,4 @@
+import re
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -72,11 +73,11 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
         cursor = conn.cursor()
         for log, attack_type in suspicious_logs:
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            # user_agent = log.get("log", "").split('"')[-2] if '"' in log.get("log", "") else "No User Agent Data"
-            
+            output = parse_httpd_log(log)
+            console.log(output)
             cursor.execute(
                 "INSERT INTO suspicious_activity (timestamp, request_ip, user_agent, attack_type) VALUES (%s, %s, %s, %s)",
-                (timestamp, ip, user_agent, attack_type)
+                (timestamp, output["ip"], output["user_agent"], attack_type)
             )
         conn.commit()
     except mysql.connector.Error as err:
@@ -85,6 +86,30 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
         if conn.is_connected():
             cursor.close()
             conn.close()
+            
+
+def parse_httpd_log(log_entry):
+    # Regular expression to match the log entry fields
+    log_pattern = (
+        r'(?P<ip>\S+) '  # IP Address
+        r'- - '  # Dash placeholders
+        r'\[(?P<datetime>[^\]]+)\] '  # Datetime
+        r'"(?P<method>\S+) '  # HTTP Method
+        r'(?P<path>[^\s]+) '  # Path
+        r'(?P<protocol>[^\"]+)" '  # Protocol
+        r'(?P<status>\d{3}) '  # Status Code
+        r'(?P<size>\d+|-) '  # Size of the response
+        r'"(?P<referrer>[^\"]*)" '  # Referrer
+        r'"(?P<user_agent>[^\"]*)"'  # User-Agent
+    )
+    
+    # Parse the log entry
+    match = re.match(log_pattern, log_entry)
+    if match:
+        return match.groupdict()
+    else:
+        raise ValueError("Log entry does not match expected format.")
+
            
 if(__name__ == '__main__'):
     # Run detection and save results
