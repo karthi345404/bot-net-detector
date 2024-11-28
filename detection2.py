@@ -65,9 +65,9 @@ def detect_attacks(file):
 
             else:
                 suspicious_logs.append((log, None))
-            return suspicious_logs
         except json.JSONDecodeError:
             print("Invalid JSON format in log:", line)
+    return suspicious_logs
             
 def save_suspicious_logs_to_mysql(suspicious_logs):
     try:
