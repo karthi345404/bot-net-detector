@@ -80,7 +80,7 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
                 continue
             request_line = output.request_line.split(" ")
             cursor.execute(
-                "INSERT INTO suspicious_activity_new (timestamp, request_ip, user_agent, attack_type, http_method, path, protocol, status, size, referrer) VALUES (%s, %s, %s, %s, %s, %s, %s, %d, %d, %s)",
+                "INSERT INTO suspicious_activity_new (timestamp, request_ip, user_agent, attack_type, http_method, path, protocol, status, size, referrer) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (output.request_time_fields["timestamp"], output.remote_host, output.headers_in["User-Agent"], attack_type, request_line[0], request_line[1], request_line[2], output.final_status, output.bytes_sent, output.headers_in["Referer"])
             )
         conn.commit()
