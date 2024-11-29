@@ -75,7 +75,7 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
         cursor = conn.cursor()
         for log, attack_type in suspicious_logs:
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            output = parse_httpd_log_2(log)
+            output = parse_httpd_log_2(log["log"])
             if(output is None):
                 continue
             request_line = output.request_line.split(" ")
@@ -119,8 +119,14 @@ def parse_httpd_log_2(log_entry):
         parser = LogParser(COMBINED)
         output = parser.parse(log_entry)
         return output
-    except: 
-        return None
+    except ValueError as ve:
+        # Continue to next format if current fails
+        print(f"ValueError for format '{log_format}': {ve}")
+    except Exception as e:
+        # Catch unexpected errors and continue to next format
+        print(f"Unexpected error for format '{log_format}': {e}")
+    print(f"Failed to parse log entry with all supported formats: {log_entry}")
+    return None
         
 
 if(__name__ == '__main__'):
@@ -129,5 +135,5 @@ if(__name__ == '__main__'):
     # suspicious_logs = detect_attacks(log_file)
     # save_suspicious_logs_to_mysql(suspicious_logs)
     # print("Suspicious activity logs saved to MySQL.")
-    print(parse_httpd_log_2('103.16.69.193 - - [28/Nov/2024:18:27:38 +0000] "GET /app/img/bridge.svg HTTP/2.0" 200 5603'))
+    print(parse_httpd_log_2('106.222.201.81 - - [28/Nov/2024:20:54:35 +0000] "GET /api/user/4 HTTP/2.0" 200 248 "https://metabase.systechcloud.net/admin/people/4/success" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"').__dict__)
 
