@@ -79,9 +79,15 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
             if(output is None):
                 continue
             request_line = output.request_line.split(" ")
+            referer = None
+            user_agent = None
+            if(not output.headers_in is None):
+                referer =  output.headers_in["Referer"]
+                user_agent = output.headers_in["User-Agent"]
+                 
             cursor.execute(
                 "INSERT INTO suspicious_activity_new (timestamp, request_ip, user_agent, attack_type, http_method, path, protocol, status, size, referrer) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (output.request_time_fields["timestamp"], output.remote_host, output.headers_in["User-Agent"], attack_type, request_line[0], request_line[1], request_line[2], output.final_status, output.bytes_sent, output.headers_in["Referer"])
+                (output.request_time_fields["timestamp"], output.remote_host, user_agent, attack_type, request_line[0], request_line[1], request_line[2], output.final_status, output.bytes_sent, referer)
             )
         conn.commit()
     except mysql.connector.Error as err:
