@@ -80,7 +80,7 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
                 continue
             request_line = output.request_line.split(" ")
             cursor.execute(
-                "INSERT INTO suspicious_activity (timestamp, request_ip, user_agent, attack_type, http_method, path, protocol, status, size, referrer) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO suspicious_activity_new (timestamp, request_ip, user_agent, attack_type, http_method, path, protocol, status, size, referrer) VALUES (%s, %s, %s, %s)",
                 (output.request_time_fields.timestamp, output.request_host, output.headers_in["User-Agent"], attack_type, request_line[0], request_line[1], request_line[2], output.final_status, output.bytes_sent, output.headers_in["Referer"])
             )
         conn.commit()
@@ -121,10 +121,10 @@ def parse_httpd_log_2(log_entry):
         return output
     except ValueError as ve:
         # Continue to next format if current fails
-        print(f"ValueError for format '{log_format}': {ve}")
+        print(f"ValueError for format '{COMBINED}': {ve}")
     except Exception as e:
         # Catch unexpected errors and continue to next format
-        print(f"Unexpected error for format '{log_format}': {e}")
+        print(f"Unexpected error for format '{COMBINED}': {e}")
     print(f"Failed to parse log entry with all supported formats: {log_entry}")
     return None
         
