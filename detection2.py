@@ -23,7 +23,7 @@ THRESHOLDS = {
    "brute_force_login": 10,
    "file_inclusion_patterns": ["..", "/etc/passwd", "boot.ini"],
    "query_string_length": 300,
-   "referrer_anomalies": ["systechcloud.net"]
+#    "referrer_anomalies": ["", "spam-site.com"]
 }
 # Initialize counters
 ip_request_counts = defaultdict(list)
@@ -57,8 +57,7 @@ def detect_attacks(file):
                 suspicious_logs.append((log, "Suspicious User-Agent"))
             elif any(restricted in path for restricted in THRESHOLDS["suspicious_paths"]):
                 suspicious_logs.append((log, "Restricted Path Access"))
-            # elif referer in THRESHOLDS["referrer_anomalies"]:
-            elif any((x in y for x in THRESHOLDS["referrer_anomalies"])) and not referer is None:
+            elif referer in THRESHOLDS["referrer_anomalies"]:
                 suspicious_logs.append((log, "Suspicious Referrer"))
             elif any(keyword in path.lower() for keyword in THRESHOLDS["sql_injection_patterns"]):
                 # Detect SQL injection patterns
