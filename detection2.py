@@ -35,15 +35,21 @@ def detect_attacks(file):
             if(line.get("log").find("[ssl:info]") != -1):
                 continue
             timestamp = datetime.strptime(log["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            ip = log.get("log", "").split()[0]
-            path = log.get("log", "").split()[6]
+            output = parse_httpd_log_2(log["log"])
+            ip = output.remote_host
+            request_line = output.request_line.split(" ")
+            path = request_line[1]
             query = path.split("?")[1] if "?" in path else ""
-            user_agent = log.get("log", "").split('"')[-2] if '"' in log.get("log", "") else "No User Agent"
-            # Extract referrer safely
-            try:
-                referer = log.get("log", "").split('"')[-4]
-            except IndexError:
-                referer = ""
+            referer = None
+            user_agent = None
+            if(hasattr(output, "headers_in")):
+                referer =  output.headers_in["Referer"]
+                user_agent = output.headers_in["User-Agent"]
+            
+            # ip = log.get("log", "").split()[0]
+            # path = log.get("log", "").split()[6]
+            # user_agent = log.get("log", "").split('"')[-2] if '"' in log.get("log", "") else "No User Agent"
+
             # Log request by IP
             ip_request_counts[ip].append(timestamp)
             # Detect suspicious activities
@@ -51,8 +57,8 @@ def detect_attacks(file):
                 suspicious_logs.append((log, "Suspicious User-Agent"))
             elif any(restricted in path for restricted in THRESHOLDS["suspicious_paths"]):
                 suspicious_logs.append((log, "Restricted Path Access"))
-            # elif referer in THRESHOLDS["referrer_anomalies"]:
-            #     suspicious_logs.append((log, "Suspicious Referrer"))
+            elif referer in THRESHOLDS["referrer_anomalies"]:
+                suspicious_logs.append((log, "Suspicious Referrer"))
             elif any(keyword in path.lower() for keyword in THRESHOLDS["sql_injection_patterns"]):
                 # Detect SQL injection patterns
                 suspicious_logs.append((log, "Possible SQL Injection"))
