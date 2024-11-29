@@ -81,7 +81,7 @@ def save_suspicious_logs_to_mysql(suspicious_logs):
             request_line = output.request_line.split(" ")
             referer = None
             user_agent = None
-            if(not output.headers_in is None):
+            if(hasattr(output, "headers_in")):
                 referer =  output.headers_in["Referer"]
                 user_agent = output.headers_in["User-Agent"]
                  
