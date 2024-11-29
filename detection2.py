@@ -3,7 +3,7 @@ import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 import mysql.connector
-from apachelogs import LogParser, COMBINED
+from apachelogs import LogParser, COMBINED, COMMON
 
 # MySQL database connection details
 DB_CONFIG = {
@@ -121,7 +121,13 @@ def parse_httpd_log_2(log_entry):
         return output
     except ValueError as ve:
         # Continue to next format if current fails
-        print(f"ValueError for format '{COMBINED}': {ve}")
+        try:
+            parser = LogParser(COMMON)
+            output = parser.parse(log_entry)
+            return output
+        except ValueError as ve:
+            print(f"ValueError for format': {ve}")
+
     except Exception as e:
         # Catch unexpected errors and continue to next format
         print(f"Unexpected error for format '{COMBINED}': {e}")
