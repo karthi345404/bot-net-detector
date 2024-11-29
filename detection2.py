@@ -23,7 +23,7 @@ THRESHOLDS = {
    "brute_force_login": 10,
    "file_inclusion_patterns": ["..", "/etc/passwd", "boot.ini"],
    "query_string_length": 300,
-#    "referrer_anomalies": ["", "spam-site.com"]
+   "referrer_anomalies": ["", "spam-site.com"]
 }
 # Initialize counters
 ip_request_counts = defaultdict(list)
